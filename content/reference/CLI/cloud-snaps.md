@@ -1,5 +1,5 @@
 ---
-title: Cloud Snapshots and Recovery of PX Volumes
+title: Cloud Snapshots and Recovery using pxctl
 linkTitle: Cloud Snaps
 keywords: portworx, container, Kubernetes, storage, Docker, k8s, flexvol, pv, persistent disk, snapshots, stork, clones, cloud, cloudsnap
 description: Learn to take a cloud snapshot of a Portworx volume using pxctl and use that snapshot
@@ -8,32 +8,33 @@ weight: 3
 
 ## Overview of cloud backups
 
-This document outlines how PX volumes can be backed up to different cloud provider's object storage including any S3-compatible object storage. If a user wishes to restore any of the backups, they can restore the volume from that point in the timeline. This enables administrators running persistent container workloads on-prem or in the cloud to safely backup their mission critical database volumes to cloud storage and restore them on-demand, enabling a seamless DR integration for their important business application data.
+This document outlines how to back-up _PX_ volumes to different cloud providers' object storage including any S3-compatible object storage. If a user wishes to restore a specific backup, he can restore the volume from that point in time. This helps administrators running persistent container workloads on-prem or in the cloud to safely backup their mission-critical database volumes to cloud storage. Next, they can restore them on-demand. This way, _PX_ enables a **seamless DR integration** for all the important business application data.
 
-### Supported Cloud Providers
+### Supported cloud providers
 
-Portworx PX-Enterprise supports the following cloud providers
+_Portworx PX-Enterprise_ supports the following cloud providers:
 
-1. Amazon S3 and any S3-compatible Object Storage
-2. Azure Blob Storage
-3. Google Cloud Storage
+1.  Amazon S3 and any S3-compatible Object Storage
+2.  Azure Blob Storage
+3.  Google Cloud Storage
 
-### Backing up a PX Volume to cloud storage
+### Backing up a PX volume to cloud storage
 
-The first backup uploaded to the cloud is a full backup. After that, subsequent backups are incremental.
-After 6 incremental backups, every 7th backup is a full backup.
+The **first** backup uploaded to the cloud is always a **full backup**. After that, subsequent backups are incremental.
+After **6 incremental** backups, every **7th backup** is a **full** backup.
 
-### Restoring a PX Volume from cloud storage
+### Restoring a PX volume from cloud storage
 
-Any PX Volume backup can be restored to a PX Volume in the cluster. The restored volume inherits the attributes such as file system, size and block size from the backup. Replication level of the restored volume defaults to 1 irrespective of the replication of the volume that was backed up. Users can increase replication factor once the restore is complete on the restored volume.
+You can restore a backup of a _PX_ to one of your _PX_ volumes in the cluster. Once restored, the volume inherits the attributes from the backup (e.g.: file system, size and block size). The replication level of the restored volume defaults to 1, irrespective of the replication level of the volume that was backed up. Users can increase the replication factor once the restore is complete on the restored volume.
 
-## Performing cloud Backups of a PX Volume
+## Performing cloud backups of a PX volume
 
-Performing cloud backups of a PX Volume is available via `pxctl cloudsnap` command. This command has the following operations available for the full lifecycle management of cloud backups.
+_PX_ volumes can be backed up to cloud via `pxctl cloudsnap`. This command provides the following operations that help administrators perform full lifecycle management of their cloud backups:
 
 ```text
-/opt/pwx/bin/pxctl cloudsnap --help
+pxctl cloudsnap --help
 ```
+
 ```
 Backup and restore snapshots to/from cloud
 
@@ -62,49 +63,78 @@ Flags:
 
 ### Set the required cloud credentials
 
-For this, we will use `pxctl credentials create` command. These cloud credentials are stored in an external secret store. Before you use the command to create credentials, ensure that you have [configured a secret provider of your choice](/key-management).
+For this, we will use `pxctl credentials create` command. Note that the cloud credentials are stored in an external secret store. Hence, before you use the command to create credentials, ensure that you have [configured a secret provider of your choice](/key-management).
+
+To see the list of available command line options, type:
 
 ```text
-pxctl credentials create
+pxctl credentials create --help
 ```
 
 ```
-NAME:
-   pxctl credentials create - Create a credential for cloud-snap
+Create a credential for cloud providers
 
-USAGE:
-   pxctl credentials create [command options] <name>
+Usage:
+  pxctl credentials create [flags]
 
-OPTIONS:
-   --provider value                            Object store provider type [s3, azure, google]
-   --s3-access-key value
-   --s3-secret-key value
-   --s3-region value
-   --s3-endpoint value                         Endpoint of the S3 server, in host:port format
-   --s3-disable-ssl
-   --azure-account-name value
-   --azure-account-key value
-   --google-project-id value
-   --google-json-key-file value
-   --encryption-passphrase value,
-   --enc value  Passphrase to be used for encrypting data in the cloudsnaps
+Aliases:
+  create, c
+
+Examples:
+/opt/pwx/bin/pxctl cred create [flags] <name>
+
+Flags:
+      --s3-disable-ssl
+      --provider string                Cloud provider type [s3, azure, google]
+      --s3-access-key string
+      --s3-secret-key string
+      --s3-region string
+      --bucket string                  Optional pre-created bucket name
+      --azure-account-name string
+      --azure-account-key string
+      --google-project-id string
+      --google-json-key-file string
+      --encryption-passphrase string   Passphrase to be used for encrypting data in the cloudsnaps
+      --s3-endpoint strings            Endpoint of the S3 servers, in comma separated host:port format
+  -h, --help                           help for create
+
+Global Flags:
+      --ca string        path to root certificate for ssl usage
+      --cert string      path to client certificate for ssl usage
+      --color            output with color coding
+      --config string    config file (default is $HOME/.pxctl.yaml)
+      --context string   context name that overrides the current auth context
+  -j, --json             output in json
+      --key string       path to client key for ssl usage
+      --raw              raw CLI output for instrumentation
+      --ssl              ssl enabled for portworx
 ```
 
-For Azure:
+#### Azure
+
+Here's how you can create the credentials for _Azure_:
 
 ```text
 pxctl credentials create --provider azure --azure-account-name portworxtest --azure-account-key zbJSSpOOWENBGHSY12ZLERJJV my-azure-cred
 ```
 
-For AWS:
+#### AWS
 
-By default, Portworx creates a bucket (ID same as cluster UUID) to upload cloudsnaps. With Portworx version 1.5.0 onwards,uploading to a pre-created bucket by a user is supported. Thus the AWS credential provided to Portworx should either have the capability to create a bucket or the bucket provided to Portworx at minimum must have the permissions mentioned below. If you prefer that a user specified bucket be used for cloudsnaps, specify the bucket id with `--bucket` option while creating the credentials.
+If you are using _AWS_, _Portworx_ creates a bucket (ID same as cluster UUID) to upload cloudsnaps by default. Starting with _Portworx_ version 1.5.0, users can upload to a pre-created bucket. Thus, the _AWS_ credentials provided to _Portworx_ should either:
 
-With user specified bucket (applicable only from 1.5.0 onwards):
+*   have the capability to create a bucket or
+*   the bucket provided to _Portworx_ at minimum must have the permissions mentioned below.
+
+If you prefer that a user specified bucket be used for cloudsnaps, specify the bucket id with the `--bucket` option while creating the credentials.
+
+##### With a user specified bucket (applicable only from 1.5.0 onwards)
+
 ```text
 pxctl credentials create --provider s3  --s3-access-key AKIAJ7CDD7XGRWVZ7A --s3-secret-key mbJKlOWER4512ONMlwSzXHYA --s3-region us-east-1 --s3-endpoint s3.amazonaws.com --bucket bucket-id my-s3-cred
 ```
-User created/specified bucket at minimum must have following permissions: Replace `<bucket-name>` with name of your user-provided bucket.
+
+User created/specified bucket at minimum must have following permissions:
+
 ```json
 {
      "Version": "2012-10-17",
@@ -131,29 +161,40 @@ User created/specified bucket at minimum must have following permissions: Replac
  }
 ```
 
-Without user specified bucket:
+{{<info>}}
+Note: Replace `<bucket-name>` with name of your user-provided bucket.
+{{</info>}}
+
+
+##### Without a user specified bucket
+
 ```text
 pxctl credentials create --provider s3  --s3-access-key AKIAJ7CDD7XGRWVZ7A --s3-secret-key mbJKlOWER4512ONMlwSzXHYA --s3-region us-east-1 --s3-endpoint s3.amazonaws.com my-s3-cred
 ```
 
-For Google Cloud:
+#### Google Cloud:
 
 ```text
 pxctl credentials create --provider google --google-project-id px-test --google-json-key-file px-test.json my-google-cred
 ```
+
+#### Configure credentials
+
 `pxctl credentials create` enables the user to configure the credentials for each supported cloud provider.
 
-An additional encryption key can also be provided for each credential. If provided, all the data being backed up to the cloud will be encrypted using this key. The same key needs to be provided when configuring the credentials for restore to be able to decrypt the data succesfuly.
+An additional encryption key can also be provided for each credential. If provided, all the data being backed up to the cloud will be encrypted using this key. The same key needs to be provided when configuring the credentials for restore. This way, _PX_ will be able to decrypt the data succesfuly.
 
 These credentials can only be created once and cannot be modified. In order to maintain security, once configured, the secret parts of the credentials will not be displayed.
 
 ### List the credentials to verify
 
-Use `pxctl credentials list` to verify the credentials supplied.
+Use `pxctl credentials list` to verify the credentials supplied as follows:
 
 ```text
-# pxctl credentials list
+pxctl credentials list
+```
 
+```
 S3 Credentials
 UUID						NAME		REGION			ENDPOINT						ACCESS KEY			SSL ENABLED		ENCRYPTION		BUCKET		WRITE THROUGHPUT (KBPS)
 af563a4d-afd7-48df-90f7-8e8f9414ff77		my-s3-cred	us-east-1		70.0.99.121:9010,70.0.99.122:9010,70.0.99.123:9010	AB6R80F3SY0VW9NS6HYQ		false			false			<nil>		1979
@@ -167,13 +208,50 @@ UUID						NAME			ACCOUNT NAME		ENCRYPTION		BUCKET		WRITE THROUGHPUT (KBPS)
 1672e1c9-c513-44db-b8b5-b59e3d35a3a2		my-azure-cred		pwx-test		false			<nil>		724
 ```
 
-`pxctl credentials list`  only displays non-secret values of the credentials. Secrets are neither stored locally nor displayed.  These credentials will be stored as part of the secret endpoint given for PX for persisting authentication across reboots. Please refer to `pxctl secrets` help for more information.
+`pxctl credentials list` only displays non-secret values of the credentials. Secrets are neither stored locally nor displayed. The credentials will be stored as part of the secret endpoint given to _PX_ for persisting authentication across reboots.
 
-The [Credentials](/reference/cli/credentials) will also have more details about this command.
+For more information, run:
 
-### Perform Cloud Backup of single volumes
+```text
+pxctl secrets help
+```
 
-The actual backup of the PX Volume is done via the `pxctl cloudsnap backup` command
+```
+Manage Secrets. Supported secret stores AWS KMS | Vault | DCOS Secrets | IBM Key Protect | Kubernetes Secrets | Google Cloud KMS
+
+Usage:
+  pxctl secrets [flags]
+  pxctl secrets [command]
+
+Available Commands:
+  aws             AWS secret-endpoint commands
+  gcloud          Google Cloud KMS commands
+  ibm             IBM Key Protect commands
+  kvdb            kvdb secret-endpoint commands
+  set-cluster-key Sets an existing secret as a cluster-wide (default) secret to be used for volume encryption
+
+Flags:
+  -h, --help   help for secrets
+
+Global Flags:
+      --ca string        path to root certificate for ssl usage
+      --cert string      path to client certificate for ssl usage
+      --color            output with color coding
+      --config string    config file (default is $HOME/.pxctl.yaml)
+      --context string   context name that overrides the current auth context
+  -j, --json             output in json
+      --key string       path to client key for ssl usage
+      --raw              raw CLI output for instrumentation
+      --ssl              ssl enabled for portworx
+
+Use "pxctl secrets [command] --help" for more information about a command.
+```
+
+You can find more details by checking out the [Credentials](/reference/cli/credentials) page.
+
+### Perform cloud backup of single volumes
+
+The actual backup of the _PX_ Volume is done via the `pxctl cloudsnap backup` command:
 
 ```text
 pxctl cloudsnap backup
@@ -193,9 +271,12 @@ OPTIONS:
 
 ```
 
-This command is used to backup a single volume to the cloud provider using the specified credentials.
-This command decides whether to take a full or incremental backup depending on the existing backups for the volume.
-If it is the first backup for the volume it takes a full backup of the volume. If its not the first backup, it takes an incremental backup from the previous full/incremental backup.
+Here are a few things to consider about this command:
+
+* it is used to backup a single volume to the cloud provider of your choice using the specified credentials.
+* it decides whether to take a full or incremental backup depending on the existing backups for the volume as follows:
+ * If it is the first backup for the volume it takes a full backup of the volume. //XXX
+ * If its not the first backup, it takes an incremental backup from the previous full/incremental backup.
 
 ```text
 pxctl cloudsnap backup volume1 --cred-id 82998914-5245-4739-a218-3b0b06160332
