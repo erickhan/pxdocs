@@ -723,7 +723,7 @@ UUID						VOLUMEID			MAX-BACKUPS		FULL		SCHEDULE(UTC)
 
 
 #### Deleting a Cloud Backup Schedule
-Run the following to deelete a backup schedule:
+Run the following to delete a backup schedule:
 
 ```text
 pxctl cloudsnap schedules  delete --uuid 078557a3-26c7-49b1-9822-34e6f816c2d1
