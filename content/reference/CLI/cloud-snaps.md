@@ -514,7 +514,7 @@ Global Flags:
 
 This command is used to restore a successful backup from the cloud. It requires the cloudsnap ID and the credentials for the cloud storage provider or the object storage. Restore happens on any node where storage can be provisioned.
 
-Once restored, the volume inherits the attributes from the backup (e.g.: file system, size and block size). However, the **replication level of the restored volume defaults to 1**, irrespective of the replication level of the volume that was backed up. Once the restore is complete, you can increase the replication factor using `pxctl volume ha-update`.
+You can restore a backup of a _PX_ to one of your _PX_ volumes in the cluster. Once restored, the volume inherits the attributes from the backup (e.g.: file system, size and block size). The replication level of the restored volume defaults to 1, irrespective of the replication level of the volume that was backed up. Users can increase the replication factor once the restore is complete on the restored volume.
 
 To restore a backup from cloud, use:
 
