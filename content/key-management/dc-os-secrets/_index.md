@@ -39,30 +39,11 @@ The `base path` is the secrets path under which Portworx will read/write secrets
 
 The `dcos username secret` and `dcos password secret` are the paths to secrets, where Portworx will look for credentials of the user to access the secrets. This user should have full access to secrets under the `base path`.
 
-If you want only Portworx framework to access the username and password secrets path, the path should have prefix same as Portworx service name \(default service name is `portworx`\).
 
-### Update config.json for existing installation
-
-If the Portworx framework is already installed, you will need to update the `/etc/pwx/config.json` on all nodes to start using DC/OS secrets by default. You still need to edit the framework from the above section, so that you don’t have to update the _config.json_ for new nodes.
-
-Add the following `secret_type` and `cluster_secret_key` fields in the `secret` section to the `/etc/pwx/config.json` on each node in the cluster:
-
-```text
-{
-    "clusterid": "",
-    "secret": {
-        "secret_type": "dcos",
-        "cluster_secret_key": "pwx/secrets/cluster-wide-secret-key"
-    },
-    ...
-}
-```
-
-You need to restart Portworx for the _config.json_ to take effect:
-
-```text
-sudo systemctl restart portworx
-```
+{{<info>}}
+**Note:**
+If you want Portworx framework to access the username and password secrets path, the path should have prefix same as Portworx service name \(default service name is `portworx`\). Refer [DC/OS docs to know more](https://docs.mesosphere.com/1.12/security/ent/#spaces-for-secrets).
+{{</info>}}
 
 ## Key generation with DC/OS {#key-generation-with-dcos}
 

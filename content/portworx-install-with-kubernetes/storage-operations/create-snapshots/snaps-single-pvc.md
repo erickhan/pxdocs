@@ -11,36 +11,35 @@ This document will show you how to create snapshot of a PVC backed by a Portworx
 
 ## Creating snapshot within a single namespace
 
-If you have a PVC called mysql-data, you can create a snapshot for that PVC by using the following spec:
+If you have a PVC called jenkins-home-jenkins-master-0, in the jenkins namespace, you can create a snapshot
+for that PVC by using the following spec:
 
 ```text
 apiVersion: volumesnapshot.external-storage.k8s.io/v1
 kind: VolumeSnapshot
 metadata:
-  name: mysql-snapshot
-  namespace: default
+  name: jenkins-home-jenkins-master-0
+  namespace: jenkins
 spec:
-  persistentVolumeClaimName: mysql-data
+  persistentVolumeClaimName: jenkins-home-jenkins-master-0
 ```
 
 Once you apply the above object you can check the status of the snapshots using `kubectl`:
 
 ```text
-kubectl get volumesnapshot
+kubectl get -n jenkins volumesnapshot
 ```
-
 ```
-NAME                             AGE
-volumesnapshots/mysql-snapshot   2s
+NAME                                                      AGE
+jenkins-jobs-jenkins-master-0-snapshot-2019-03-20-snap1   6m
 ```
-
 ```text
-kubectl get volumesnapshotdatas
+kubectl get -n jenkins volumesnapshotdatas
+```
 ```
 
-```
-NAME                                                                            AGE
-volumesnapshotdatas/k8s-volume-snapshot-2bc36c2d-227f-11e8-a3d4-5a34ec89e61c    1s
+NAME                                                       AGE
+k8s-volume-snapshot-ab059f02-4b5e-11e9-bca9-0242ac110002   8m
 ```
 
 The creation of the volumesnapshotdatas object indicates that the snapshot has
@@ -50,40 +49,48 @@ Portworx Volume Snapshot ID and the PVC for which the snapshot was created.
 ```text
 kubectl describe volumesnapshotdatas
 ```
-
 ```
-Name:         k8s-volume-snapshot-2bc36c2d-227f-11e8-a3d4-5a34ec89e61c
-Namespace:    
+Name:         k8s-volume-snapshot-ab059f02-4b5e-11e9-bca9-0242ac110002
+Namespace:
 Labels:       <none>
 Annotations:  <none>
 API Version:  volumesnapshot.external-storage.k8s.io/v1
 Kind:         VolumeSnapshotData
 Metadata:
-  Cluster Name:                   
-  Creation Timestamp:             2018-03-08T03:17:02Z
-  Deletion Grace Period Seconds:  <nil>
-  Deletion Timestamp:             <nil>
-  Resource Version:               29989636
-  Self Link:                      /apis/volumesnapshot.external-storage.k8s.io/v1/k8s-volume-snapshot-2bc36c2d-227f-11e8-a3d4-5a34ec89e61c
-  UID:                            2bc3a203-227f-11e8-98cc-0214683e8447
+  Creation Timestamp:  2019-03-20T22:22:37Z
+  Generation:          1
+  Resource Version:    56596513
+  Self Link:           /apis/volumesnapshot.external-storage.k8s.io/v1/volumesnapshotdatas/k8s-volume-snapshot-ab059f02-4b5e-11e9-bca9-0242ac110002
+  UID:                 ab07a5c9-4b5e-11e9-9693-0cc47ab5f9a2
 Spec:
   Persistent Volume Ref:
     Kind:  PersistentVolume
-    Name:  pvc-f782bf5c-20e7-11e8-931d-0214683e8447
+    Name:  pvc-9b609a88-3f5e-11e8-83b6-0cc47ab5f9a2
   Portworx Volume:
-    Snapshot Id:  991673881099191762
+    Snapshot Id:    411710013297550893
+    Snapshot Type:  local
   Volume Snapshot Ref:
     Kind:  VolumeSnapshot
-    Name:  default/mysql-snapshot-2b2150dd-227f-11e8-98cc-0214683e8447
+    Name:  jenkins/jenkins-jobs-jenkins-master-0-snapshot-2019-03-20-snap1-aa53d9a3-4b5e-11e9-9693-0cc47ab5f9a2
 Status:
   Conditions:
-    Last Transition Time:  <nil>
-    Message:               
-    Reason:                
-    Status:                
-    Type:                  
+    Last Transition Time:  2019-03-20T22:22:37Z
+    Message:               Snapshot created successfully and it is ready
+    Reason:
+    Status:                True
+    Type:                  Ready
   Creation Timestamp:      <nil>
 Events:                    <none>
+```
+
+In addition, you can use storkctl to verify that the snapshot was created successfully:
+
+```text
+storkctl -n jenkins get snap
+```
+```
+NAME                                                      PVC                             STATUS    CREATED               COMPLETED             TYPE
+jenkins-jobs-jenkins-master-0-snapshot-2019-03-20-snap1   jenkins-jobs-jenkins-master-0   Ready     20 Mar 19 15:22 PDT   20 Mar 19 15:22 PDT   local
 ```
 
 To create PVCs from existing snapshots, read [Creating PVCs from snapshots](/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-local#pvc-from-snap).

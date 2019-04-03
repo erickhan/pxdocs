@@ -1,18 +1,22 @@
 ---
-title: Cloud Drives (ASG)
+title: Cloud Drives (ASG) using pxctl
 description: General reference for CLI Cloud Drives on ASG.
 keywords: portworx, containers, storage, volumes, CLI, ASG
 weight: 2
+linkTitle: Cloud Drives (ASG)
 ---
 
-#### CloudDrive operations {#clouddrive-operations}
+## Cloud Drive operations
 
-Portworx when running in ASG mode provides a set of CLI commands to display the information about all EBS volumes and their attachment information.
+If you run _Portworx_ in ASG mode, the CLI provides a set of commands that display the information about the EBS volumes.
 
-**Cloud Drive Help**
+### Cloud Drive Help
 
 ```text
-/opt/pwx/bin/pxctl clouddrive --help
+pxctl clouddrive --help
+```
+
+```
 NAME:
    pxctl clouddrive - Manage cloud drives
 
@@ -27,18 +31,15 @@ OPTIONS:
    --help, -h  show help
 ```
 
-{{<info>}}
-**Note:** Following commands are only available for PX version &gt; 1.3
-{{</info>}}
+### Listing all Cloud Drives
 
-**Listing all Cloud Drives**
-
-Run the following command to display all the cloud drives being used by Portworx.
+To display all the cloud drives being used by _Portworx_, type:
 
 ```text
+pxctl clouddrive list
+```
 
-/opt/pwx/bin/pxctl clouddrive list
-
+```
 Cloud Drives Summary
         Number of nodes in the cluster:  3
         Number of drive sets in use:  3
@@ -52,14 +53,15 @@ Drive Set List
         2                ip-172-20-52-178.ec2.internal        i-09169ceb37b251bac        us-east-1a        vol-0bd9aaab0fb615351, vol-0c9f027d111844227
 ```
 
-**Inspecting Cloud Drives**
+### Inspecting Cloud Drives
 
-Run the following command to display more information about the drives attached on a node.
+Run the following command to display more detailed information about the drives attached to a node:
 
 ```text
+pxctl clouddrive inspect --nodeid ip-172-20-53-168.ec2.internal
+```
 
-/opt/pwx/bin/pxctl clouddrive inspect --nodeid ip-172-20-53-168.ec2.internal
-
+```
 Drive Set Configuration
         Number of drives in the Drive Set:  2
         NodeID:  ip-172-20-53-168.ec2.internal
