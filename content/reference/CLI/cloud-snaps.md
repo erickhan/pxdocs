@@ -8,7 +8,7 @@ weight: 3
 
 ## Overview of cloud backups
 
-This document outlines how to back-up _PX_ volumes to different cloud providers' object storage, including any S3-compatible object storage. If a user wishes to restore a specific backup, he can restore the volume from that point in time.
+This document outlines how to back-up _PX_ volumes to different cloud providers' object storage, including any S3-compatible object storage. To restore a specific backup, the user can restore the volume from that point in time.
 
 _Portworx_ helps administrators running persistent container workloads, on-prem or in the cloud, to safely backup their mission-critical database volumes to any supported cloud storage. Next, they can restore them on-demand. This way, _PX_ enables a **seamless DR integration** for all the important business application data.
 
