@@ -7,18 +7,15 @@ series: concepts
 ---
 
 ## Overview
-The **Storage Policy** feature lets you manage storage policies in PX cluster.
-Storage Policy allows adminstrator to ensure volume being created on PX cluster has to
-follows set of specs/rules based on storage policy set.
+The **Storage Policy** feature lets you manage storage policies in a PX cluster with `pxctl storage-policy` or `pxctl stp`. This allows storage system admins to ensure that volumes being created follow a certain default spec. In order to have storage system admin, your token must have access to all groups (`groups: "*"`) and the `system.admin` role.
 
-For example, you can set storage policy which ensures volume created
-on PX cluster has minimum replication level 2.
+Storage policies allow for a sort of guardrail against known bad volume specs within your cluster. For example, you can have a storage policy which ensures that volumes created on a PX cluster have a minimum replication level of 2. 
 
-To create and manage storage policy, use `pxctl storage-policy/[stp]`
+You can also set specific ownership levels for storage policies using the `pxctl stp access` command, which will be covered below. 
 
-## Create Storage Policy
+## Creating Storage Polices
 
-Create storage policy takes set of volume specs to be followed by volume create operation.
+Create storage policy takes a set of default volume specs to be used during volume creation
 
 ```
 # pxctl storage-policy create devpol --replication 2,min --secure --sticky --periodic 60,10
@@ -28,14 +25,14 @@ StoragePolicy   Description
 devpol          HA="2,Minimum" Encrypted="true" Sticky="true"...
 qapol           HA="2,Minimum" Encrypted="true" Sticky="true"...
 ```
-If `devpol` storage policy is set to **default** , then volume created afterword will have minimum repl level 2, encryption enabled, sticky bit on and periodic snapshot schedule 60 mins, 10 keeps
+If the `devpol` storage policy is set to be the **default** storage policy, then all volumes created will have a minimum repl level of 2, encryption enabled, sticky flag on, and periodic snapshot schedule of 60 mins, keeping 10 snapshots. 
 
-## Set default storage policy
+## Setting a default storage policy
 
-If storage policy is set as default, volume created afterward will follow volume parameters defined by storage policy. 
-You can use `pxctl storage-policy set-default` option to set storage policy as default policy in portworx cluster
+If a storage policy is set as the default, all volumes created will follow the spec defined by that storage policy. 
+You can use the `pxctl storage-policy set-default` command to set a storage policy as the cluster-wide default.
 
-Set **devpol** as default storage policy
+How to set **devpol** as the default storage policy:
 ```
 # pxctl storage-policy set-default devpol
 Storage Policy *devpol* is set to default
@@ -53,13 +50,13 @@ Storage Policy  :  devpol
     Sticky                    : true
     SnapInterval              : periodic 1h0m0s,keep last 10
 ```
-Let's create volume Create volume with less ha level than specified in default storage policy
+Let's create a volume with a smaller replication level than what's specified in the default storage policy
 
 ```
 # pxctl v c polvol --repl 1 --size 10
 pxctl v i Volume successfully created: 745102698654969688
 ```
-**Note**:  Volume Should be created with properties repl 2, secure and snap schedules as periodic 60,10
+**Note**: The volume should be created with properties repl 2, secure, and snap schedules as periodic 60mins, 10 keeps
 ```
 # ## Inspect Volume ##
 # pxctl v i polvol
@@ -90,10 +87,9 @@ Volume  :  745102698654969688
     Replication Status   :  Detached
  ```   
 
-## Remove default storage policy restriction
+## Removing the default storage policy
 
-To remove storage policy restriction from PX cluster use `pxctl storage-policy unset-default` . This will remove any storage policy restriction on
-volume
+To remove a storage policy restriction from PX cluster use `pxctl storage-policy unset-default` .
 ```
 # pxctl storage-policy list
 StoragePolicy   Description
@@ -145,10 +141,10 @@ Volume  :  880058853866312532
     Replication Status   :  Detached
 ```
 
-## Update Storage Policy
+## Updating Storage Policies
 
-You can update existing storage policy parameter.
-eg. Update `qapol` replication from `2,Equal to 1,min` 
+You can also update existing storage policy parameters.
+eg. Update `qapol` replication from `2,equal to 1,min` 
 
 ```
 # pxctl stp list    
@@ -163,7 +159,7 @@ qapol         HA="1,Minimum" Sticky="true" SnapInterval="policy=weekpol"...
 
 ```
 
-If storage policy which is being updated , is already set as default . Then volume creation thereafter will follow updated default policy specs
+If a storage policy is updated while set as the default, then volume creation thereafter will follow the updated  policy spec.
 
 ```
 # pxctl stp list
@@ -188,7 +184,7 @@ Storage Policy : qapol
         SnapInterval    : policy=snapSched
 ```
 
-Let's create volume, it will have **snapSched** as snapshot policy attached
+Let's create volume, it will have **snapSched** as snapshot policy attached.
 ```
 # pxctl v c updatedqapol --size 10
 Volume successfully created: 1131539442993682535
@@ -219,9 +215,9 @@ Volume  :  1131539442993682535
     Replication Status   :  Detached
 ```
 
-## Delete Storage Policy
+## Deleting Storage Policies
 
-Use pxctl storage-policy delete policyname to delete storage policy. If you need to delete default policy --force flag is required.
+Use `pxctl storage-policy delete <policy-name>` to delete a storage policy. If you want to delete the default policy, the `--force` flag is required.
 
 ```
 # pxctl stp delete  devpol
@@ -234,7 +230,7 @@ Storage Policy qapol is deleted
 **Note**: Deleting default storage policy, will remove volume creation restriction specified by policy
 
 ## Create volumes by specifying storage policy
-You can specify storage policy during volume create, volume created will follow storage policy rules
+You can also specify any storage policy during volume create: 
 
 ```
 # pxctl stp create testpol --replication 2,min --sticky --weekly sunday@08:30,8
@@ -248,7 +244,7 @@ Storage Policy  :  testpol
     SnapInterval              : weekly Sunday@08:30,keep last 8
     HA                        : 2,Minimum
  ```   
-Create volume using storage policy **testpol**
+Create a volume using storage policy **testpol**
 
 ```
 # pxctl v c customvol --size 10 --storagepolicy testpol
@@ -283,12 +279,12 @@ Volume  :  492212712402729915
 ```
 **Note**: 
 
-* Specs such as `replication 2` , snapshot policy `weekly Sunday@08:30,keep last 8` and `sticky` set to volume 
-* Specifying custom policy will override, default storage policy if any
+* Specs such as `replication 2`, snapshot policy `weekly Sunday@08:30,keep last 8`, and `sticky` are all present on the volume inspect
+* Specifying a custom policy will override the default storage policy
 
-## Storage Policy Parameters
+## Storage Policy options
 
-`pxctl storage policy create` show the available options through the –help command, description of how those options applied is as below :
+`pxctl storage policy create --help` shows the available options you can have in a storage policy. A description of how those options can be used is described below.
 
 ```
 a) If below flags are specified while creating storage policy,  volume creation will have respective spec applied. 
@@ -324,3 +320,74 @@ If storage policy created with replication 2, Volume created will have exact rep
 
 
 {{<homelist series="px-storage-policy">}}
+
+## Storage policy access control
+
+Storage policies also can have restricted access for specific collaborators and groups. The following commands allow you to update groups and collaborators per storage policy:
+
+* `pxctl stp access add`
+* `pxctl stp access remove`
+* `pxctl stp access show`
+* `pxctl stp access update`
+
+### Storage policy access types
+When adding or updating storage policy ACLs, you can provide the following access types:
+
+* __`Read (default)`:__ User or group can use the storage policy
+* __`Write`:__ User or group can bypass the storage-policy or update it.
+* __`Admin`:__ Can delete the storage-policy (with RBAC access to the StoragePolicy service APIs)
+
+
+These types can be declared after each group or collaborator name:
+```
+pxctl stp access add devpol --group group1:w
+pxctl stp access add devpol --collaborator collaborator1:a
+pxctl stp access add devpol --collaborator collaborator2:r
+```
+
+After the above series of commands,
+
+* `group1` will have `Write` access
+* `collaborator1` will have `Admin` access
+* `collaborator2` will have `Read` access
+
+
+
+### Storage policy access update
+
+The update subcommand for storage policies will set the ACLs for that given storage policy. All previous ACLs will be overwritten.
+
+For example, you can update a storage policy to be owned  by a single owner named `user1`:
+
+`pxctl stp access update devpol --owner user1`
+
+Or, you can provide a series of collaborators with access to that storage-policy:
+
+`pxctl stp access update devpol --collaborators user1,user2,user3`
+
+Lastly, you can update a storage-policy to be accessible by a series of groups:
+
+`pxctl stp access update devpol --groups group1,group2`
+
+__Note:__ This command will update all ACLs for a storage-policy. i.e. If you have given access to a series of groups, but do not provide the same groups the next update, those groups will no longer have access.
+
+To add/remove single groups/collaborators to have access, try using `pxctl stp access add/remove`.
+
+### Storage policy access show
+
+To see the ACLs for a given storage-policy, you can use `pxctl stp access show`
+```
+pxctl stp access show devpol
+Storage Policy:  devpol
+Ownership:
+  Owner:  collaborator1
+  Acls:
+    Groups:
+      group1         Read
+      group2         Read
+```
+
+### Storage policy access add/remove
+
+To remove or add a single collaborator or group access, you can do so with `pxctl stp access add devpol --collaborator user:w` or `pxctl stp access remove devpol --group group1` 
+
