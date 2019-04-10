@@ -10,49 +10,74 @@ aliases:
 ---
 
 ## Pre-requisites
-* **Version**: The source AND destination clusters need the v2.0 or later
-release of PX-Enterprise on both clusters. As future releases are made, the two
-clusters can have different PX-Enterprise versions (e.g. v2.1 and v2.3). Also requires stork v2.0+ on the source cluster.
-* **Secret Store** : Make sure you have configured a [secret store](/key-management) on both your clusters.
-This will be used to store the credentials for the objectstore.
-* **Network Connectivity**: Ports 9001 and 9010 on the destination cluster should be
-reachable by the source cluster.
+
+* **Version**: The source AND destination clusters need _PX-Enterprise_ v2.0 or later
+release. As future releases are made, the two clusters can have different _PX-Enterprise_ versions (e.g. v2.1 and v2.3). You can install _PX- Enterprise_ from `portworx/px-base-enterprise:master`.
+
+* **Stork v2.0+** is required on the source cluster. To install it, pull [this Docker image] (https://hub.docker.com/r/openstorage/stork)
+
 * **Stork helper** : `storkctl` is a command-line tool for interacting with a set of scheduler extensions.
-The following steps can be used to download `storkctl`:
+The following steps can be used to download and install `storkctl`:
   * Linux:
 
          ```bash
-curl http://openstorage-stork.s3-website-us-east-1.amazonaws.com/storkctl/2.0.0/linux/storkctl -o storkctl &&
+curl http://openstorage-stork.s3-website-us-east-1.amazonaws.com/storkctl/latest/linux/storkctl -o storkctl &&
 sudo mv storkctl /usr/local/bin &&
 sudo chmod +x /usr/local/bin/storkctl
          ```
   * OS X:
 
          ```bash
-curl http://openstorage-stork.s3-website-us-east-1.amazonaws.com/storkctl/2.0.0/darwin/storkctl -o storkctl &&
+curl http://openstorage-stork.s3-website-us-east-1.amazonaws.com/storkctl/latest/darwin/storkctl -o storkctl &&
 sudo mv storkctl /usr/local/bin &&
 sudo chmod +x /usr/local/bin/storkctl
          ```
   * Windows:
-      * Download [storkctl.exe](http://openstorage-stork.s3-website-us-east-1.amazonaws.com/storkctl/2.0.0/windows/storkctl.exe)
+      * Download [storkctl.exe](http://openstorage-stork.s3-website-us-east-1.amazonaws.com/storkctl/latest/windows/storkctl.exe)
       * Move `storkctl.exe` to a directory in your PATH
 
+* **Secret Store** : Make sure you have configured a [secret store](/key-management) on both clusters. This will be used to store the credentials for the objectstore.
+
+* **Network Connectivity**: Ports 9001 and 9010 on the destination cluster should be
+reachable by the source cluster.
+
+
 ## Pairing clusters
-On Kubernetes you will define a trust object required to communicate with the destination cluster called a ClusterPair. This creates a pairing 
-with the storage driver (Portworx) as well as the scheduler (Kubernetes) so that the volumes and resources, can be migrated between
-clusters.
 
-### Get cluster token from destination cluster
-On the destination cluster, run the following command from one of the Portworx nodes to get the cluster token:
-   `/opt/pwx/bin/pxctl cluster token show`
+On Kubernetes you will define a trust object required to communicate with the destination cluster called a ClusterPair. This creates a pairing with the storage driver (Portworx) as well as the scheduler (Kubernetes) so that the volumes and resources can be migrated between clusters.
 
-### Generate ClusterPair spec
-Get the **ClusterPair** spec from the destination cluster. This is required to migrate Kubernetes resources to the destination cluster.
-You can generate the template for the spec using `storkctl generate clusterpair -n migrationnamespace remotecluster` on the destination cluster.
-Here, the name (remotecluster) is the Kubernetes object that will be created on the source cluster representing the pair relationship.
-During the actual migration, you will reference this name to identify the destination of your migration
+### Getting the cluster token from the destination cluster
+
+First, let's get the cluster token of the destination cluster. Run the following command from one of the _Portworx_ nodes in the **destination cluster**:
+
+
+```text
+pxctl cluster token show
 ```
-$ storkctl generate clusterpair -n migrationnamespace remotecluster
+
+You should see something like:
+
+```
+Token is 0795a0bcd46c9a04dc24e15e7886f2f957bfee4146442774cb16ec582a502fdc6aebd5c30e95ff40a6c00e4e8d30e31d4dbd16b6c9b93dfd56774274ee8798cd
+```
+
+### Generating the ClusterPair spec
+
+Get the ClusterPair spec from the destination cluster. This is required to migrate _Kubernetes_ resources to the destination cluster.
+
+On the destination cluster, you can generate the template for the spec with this command:
+
+```text
+storkctl generate clusterpair -n <migrationnamespace> <remotecluster>
+```
+
+{{<note>}}
+The name ``<remotecluster>`` is the _Kubernetes_ object that will be created on the source cluster representing the pair relationship. During the actual migration, you will reference this name to identify the destination of your migration.
+{{</note>}}
+
+Running the above command should print something like this:
+
+```
 apiVersion: stork.libopenstorage.org/v1alpha1
 kind: ClusterPair
 metadata:
@@ -88,14 +113,15 @@ status:
 
 ### Update ClusterPair with storage options
 
-In the generated **ClusterPair** spec, you will need to add Portworx clusterpair information under spec.options. The required options are:
+In the generated **ClusterPair** spec, you will need to add the _Portworx_ clusterpair information under `spec.options`. The required options are:
 
-   1. **ip**: IP of one of the Portworx nodes on the destination cluster
-   2. **port**: Port on which the Portworx API server is listening for requests.
+   1. **ip**: IP of one of the _Portworx_ nodes on the destination cluster
+   2. **port**: Port on which the _Portworx_ API server is listening for requests.
       Default is 9001 if not specified
    3. **token**: Cluster token generated in the [previous step](#get-cluster-token-from-destination-cluster)
 
 The updated **ClusterPair** should look like this:
+
 ```
 apiVersion: stork.libopenstorage.org/v1alpha1
 kind: ClusterPair
@@ -133,22 +159,33 @@ status:
 ```
 Copy and save this to a file called clusterpair.yaml on the source cluster.
 
-### Create the ClusterPair
-On the source cluster create the clusterpair by applying the generated spec.
-```
+### Creating the ClusterPair
+
+On the source cluster, create the clusterpair by applying the generated spec:
+
+```text
 $ kubectl apply -f clusterpair.yaml
+```
+
+```
 clusterpair.stork.libopenstorage.org/remotecluster created
 ```
 
-### Verify the Pair status
-Once you apply the above spec on the source cluster you should be able to check the status of the pairing. On a successful pairing, you should
-see the "Storage Status" and "Scheduler Status" as "Ready" using storkctl on the
-source cluster:
+### Verifying the Pair status
+
+Once you apply the above spec on the source cluster, you should be able to check the status of the pairing:
+
+```text
+storkctl get clusterpair
 ```
-$ storkctl get clusterpair
+
+On a successful pairing, you should see the "Storage Status" and "Scheduler Status" as "Ready":
+
+```
 NAME               STORAGE-STATUS   SCHEDULER-STATUS   CREATED
 remotecluster      Ready            Ready              26 Oct 18 03:11 UTC
 ```
+If so, you’re all set and ready to migrate. If instead you get something like:”
 
 ### Troubleshooting
 If the status is in error state you can describe the clusterpair to get more information
@@ -166,7 +203,7 @@ Once the pairing is configured, applications can be migrated repeatedly to the d
 #### Using a spec file
 In order to make the process schedulable and repeatable, you can write a YAML
 specification. In that YAML, you will specify an object called a Migration.
-In the specification, you will define the scope of the 
+In the specification, you will define the scope of the
 applications to move and decide whether to automatically start the applications.
 Here, create a migration and save as migration.yaml.
 ```
