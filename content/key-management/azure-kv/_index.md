@@ -27,7 +27,7 @@ Following are the authentication details required by Portworx to connect Azure K
 - `AZURE_TENANT_ID`: Azure Active Directory ID
 - `AZURE_CLIENT_ID`: Azure application ID which is registered with Azure active directory and has access to azure key vault mentioned in `AZURE_VAULT_URL`
 - `AZURE_CLIENT_SECRET`: Azure application secret id, you may need to generate one if not created already. Follow [doc](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#get-application-id-and-authentication-key) to generate new secret key for your application
-- `AZURE_ENVIRONMENT`(optional): Azure environment or [cloudname](https://docs.microsoft.com/en-us/cli/azure/cloud?view=azure-cli-latest#az-cloud-list).  Default cloud name is AzurePublicCloud
+- `AZURE_ENVIRONMENT`(optional): Azure environment or [az cloud list](https://docs.microsoft.com/en-us/cli/azure/get-started-with-azure-cli?view=azure-cli-latest).  Default cloud name is AzurePublicCloud
 
 ### Kubernetes users {#kubernetes-users}
 
