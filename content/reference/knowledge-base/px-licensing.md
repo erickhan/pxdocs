@@ -8,23 +8,22 @@ weight: 4
 
 ## Introduction
 
-Starting with the v1.2.8 release, the Portworx products support the following license types:
+Starting with the v1.2.8 release, _Portworx_ offers the following options for licensing its products:
 
 |      License type      |  Description
 |:-----------------------|:-------------------------------------------------------------------------------------------------------------------------------
 | PX-Developer           | Embedded into [px-developer](/install-with-other/docker/standalone/px-developer), free license that supports limited functionality.
 | Trial                  | Automatically installed w/ [px-enterprise](/), enables full functionality for 30 days.
 | PX-Enterprise VM Limited | Enterprise license, suitable for small VM/cloud -based installs
-| PX-Enterprise Metal Limited | Enterprise license, suitable for small installs on any hardware 
+| PX-Enterprise Metal Limited | Enterprise license, suitable for small installs on any hardware
 | PX-Enterprise VM       | Enterprise license, suitable for large VM/cloud -based installs
-| PX-Enterprise Metal    | Enterprise license, suitable for large installs on any hardware 
+| PX-Enterprise Metal    | Enterprise license, suitable for large installs on any hardware
 
 
 Depending on the type of the container you are installing, a different license will be automatically activated:
 
 * [px-developer](/install-with-other/docker/standalone/px-developer) container activates free "PX-Developer" license, and
-* [px-enterprise](/) automatically
-activates the "Trial" license (limited to 30 days), which can be upgraded to one of the "PX-Enterprise" licenses at any time.
+* [px-enterprise](/) automatically activates the "Trial" license (limited to 30 days), which can be upgraded to one of the "PX-Enterprise" licenses at any time.
 
 ## Checking your License
 
@@ -39,7 +38,7 @@ License: Trial license (expires in 30 days)
  [...]
 ```
 
-More details about each individual licensed feature is displayed via `pxctl license list` command, ie.:
+More details about each individual licensed feature are displayed via `pxctl license list` command, ie.:
 
 ```text
 pxctl license list
@@ -59,7 +58,7 @@ In the table below, we can see the overview of features that are controlled via 
 |       Description            |  Type  | Details
 |:-----------------------------|:------:|:------------------------------------------------------------------------------------
 | Number of nodes maximum      | number | Defines the maximum number of nodes in a cluster
-| Number of volumes maximum    | number | Defines max number of volues on a single node
+| Number of volumes maximum    | number | Defines max number of volumes on a single node
 | Volume capacity [TB] maximum | number | Defines max size of a single volume
 | Storage aggregation          | yes/no | Defines if volumes may be aggregated across multiple nodes
 | Shared volumes               | yes/no | Defines if volumes may be shared w/ other nodes
@@ -68,7 +67,7 @@ In the table below, we can see the overview of features that are controlled via 
 | Resize volumes on demand     | yes/no | Defines if volumes can be resized
 | Snapshot to object store     | yes/no | Defines if volumes may be snapshotted to Amazon S3, MS Azure and Google storage
 | Cluster level migration      | yes/no | Defines if applications and data (using K8s namespace) can be migrated between paired clusters
-| Disaster Recovery (PX-DR)    | yes/no | Enables synchronous and asynchronous DR features (added in 2.1, needs additional license)
+| Disaster Recovery (PX-DR)    | yes/no | Enables synchronous and asynchronous DR features (added in 2.1, needs an additional license)
 | Virtual machine hosts        | yes/no | Software may be deployed on VMs (including Amazon EC2, OpenStack Nova, etc...)
 | Bare-metal hosts             | yes/no | Software may be deployed on commodity hardware
 
@@ -104,9 +103,9 @@ Product SKU                  PX-Developer  permanent
 ### Trial License
 
 The "Trial" license activates automatically when the [px-enterprise](/) is installed.
-The trial license provides the full product functionality for 30 days.
+The trial license provides full product functionality for 30 days.
 
-```bash
+```
 DESCRIPTION                  ENABLEMENT  ADDITIONAL INFO
 Number of nodes maximum         1000
 Number of volumes maximum       1024
@@ -131,8 +130,7 @@ The normal functionality may be restored at any time, by purchasing and installi
 #### UPGRADE NOTES
 
 * The "Trial" license can be upgraded into a "PX-Enterprise" license by contacting
-support@portworx.com, and activating via the "activation code" or via the
-license file (see [PX-Enterprise](#px-enterprise-license) below for details)
+support@portworx.com, and activating via the "activation code" or via the license file (see [PX-Enterprise](#px-enterprise-license) below for details)
 * The "Trial" license itself cannot be upgraded or extended with another "Trial", or downgraded into "PX-Developer" license.
 
 
@@ -156,13 +154,12 @@ The easiest way to install the "PX-Enterprise" license, is via the
 pxctl license activate c0ffe-fefe-activation-123
 ```
 
-Note that the "license activation" process will require active Internet connection from the PX-nodes to the license-server,
-as the activation process automatically registers the cluster UUID, generates and installs the license on the cluster.
+Note that the "license activation" process will require active Internet connection from the PX-nodes to the license-server, as the activation process automatically registers the cluster UUID, generates and installs the license on the cluster.
 Upon activating the license on one PX-node, all remaining PX-nodes will automatically update to the new license.
 
 #### Install on air-gapped environments
 
-Customers that do not have an active Internet connection on their PX-cloud, will need to be guided by the Portworx support (can be reached at support@portworx.com) , and will follow a slightly different process.
+Customers that do not have an active Internet connection on their PX-cloud, will need to be guided by the Portworx support (can be reached at support@portworx.com), and will follow a slightly different process.
 
 Customers will be asked to provide the `Cluster UUID` information (available via `pxctl cluster list` command):
 
@@ -182,12 +179,11 @@ The "license file" will need to be uploaded to one of the PX-nodes, and activate
 pxctl license add license_file.bin
 ```
 
-Finally, please note that the license installation is a non-obtrusive process, which will not interfere with the data stored
-on the PX volumes, nor will it interrupt the active IO operations.
+Finally, please note that the license installation is a non-obtrusive process, which will not interfere with the data stored on the PX volumes, nor will it interrupt the active IO operations.
 
 #### License transfer
 
-From PX Enterprise 1.4.0 onwards, a valid enterprise license can be transferred between two Portworx clusters. Both Portworx clusters need to be operational at the time of license transer.
+From PX Enterprise 1.4.0 onwards, a valid enterprise license can be transferred between two Portworx clusters. Both Portworx clusters need to be operational at the time of license transfer.
 The source cluster must have a valid PX-Enterprise license, while the destination cluster can have either a valid or expired Trial license, PX-Developer, or expired PX-Enterprise license.
 
 License transfer command requires 'clusterUUID' from the source cluster, (available via `pxctl cluster list` command) and remote PX cluster node IP.
@@ -218,8 +214,8 @@ EXAMPLE:
 
 {{<info>}}Note:
 
-* The license transfer happens directly between the Portworx clusters, so at least one node from source cluster must have a network connectivity to a node in the target Portworx cluster.
+* The license transfer happens directly between the Portworx clusters, so at least one node from source cluster must have network connectivity to a node in the target Portworx cluster.
 * After the successful license transfer, the two Portworx clusters will have swapped identities, and licenses (for example, Portworx cluster A will have Trial license originally from Portworx cluster B, while the cluster B will have the PX Enterprise license originally from cluster A)
 {{</info>}}
 
-For information on purchase, upgrades and support, please reach out to us at support@portworx.com
+For information on purchase, upgrades, and support, please reach out to us at support@portworx.com
