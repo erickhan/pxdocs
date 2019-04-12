@@ -1,6 +1,6 @@
 ---
 title: Storage policy using pxctl
-description: Manage portworx storage policies
+description: Manage Portworx storage policies
 keywords: portworx, storage policy, volume
 weight: 1
 series: concepts
@@ -9,8 +9,8 @@ linkTitle: Storage Policy
 
 ## Overview
 
-This feature lets you manage the **storage policies** of the PX cluster.
-Once defined, a **storage policy** ensures that the volumes being created on the PX cluster follow the same set of specs/rules.
+This feature lets you manage the **storage policies** of the _PX_ cluster.
+Once defined, a **storage policy** ensures that the volumes being created on the _PX_ cluster follow the same set of specs/rules.
 
 To learn about the available commands, type:
 
@@ -568,5 +568,113 @@ If storage policy creates with replication 2, flag. Volume created will be ensur
 If storage policy is created with replication 2, Volume created will have exact replication level 2
 ```
 
-
 {{<homelist series="px-storage-policy">}}
+
+## Storage policy access control
+
+Storage policies also can have restricted access for specific collaborators and groups. The following commands allow you to update groups and collaborators per storage policy:
+
+```text
+ pxctl stp access add
+```
+
+```text
+pxctl stp access remove
+```
+
+```text
+pxctl stp access show
+```
+
+```text
+pxctl stp access update
+```
+
+### Storage policy access types
+
+When adding or updating storage policy ACLs, you can provide the following access types:
+
+* __`Read (default)`:__ User or group can use the storage policy
+* __`Write`:__ User or group can bypass the storage-policy or update it.
+* __`Admin`:__ Can delete the storage-policy (with RBAC access to the StoragePolicy service APIs)
+
+Let's look at a few simple examples:
+
+```text
+pxctl stp access add devpol --group group1:w
+```
+
+```text
+pxctl stp access add devpol --collaborator collaborator1:a
+```
+
+```text
+pxctl stp access add devpol --collaborator collaborator2:r
+```
+
+Here's what will happen once the above commands get executed:
+
+* `group1` will have `Write` access
+* `collaborator1` will have `Admin` access
+* `collaborator2` will have `Read` access
+
+### Storage policy access update
+
+The update subcommand for storage policies will set the ACLs for that given storage policy. All previous ACLs will be overwritten.
+
+For example, you can update a storage policy to be owned by a single owner named `user1`:
+
+```text
+pxctl stp access update devpol --owner user1
+```
+
+Or, you can provide a series of collaborators with access to that storage-policy:
+
+```text
+pxctl stp access update devpol --collaborators user1,user2,user3
+```
+
+Lastly, you can update a storage-policy to be accessible by a series of groups:
+
+```text
+pxctl stp access update devpol --groups group1,group2
+```
+
+{{<info>}}
+This command will update all ACLs for a storage-policy. That is if you have given access to a series of groups, but do not provide the same groups the next update, those groups will no longer have access.
+{{</info>}}
+
+To add/remove single groups/collaborators to have access, try using `pxctl stp access add/remove`.
+
+### Storage policy access show
+
+To see the ACLs for a given storage-policy, you can use `pxctl stp access show` as follows:
+
+```text
+pxctl stp access show devpol
+```
+
+```
+Storage Policy:  devpol
+Ownership:
+  Owner:  collaborator1
+  Acls:
+    Groups:
+      group1         Read
+      group2         Read
+```
+
+### Storage policy access add/remove
+
+To remove or add a single collaborator or group access, you can do so with:
+
+ ```text
+ pxctl stp access add devpol --collaborator user:w
+ ```
+
+ 
+ or 
+ 
+ ```
+ pxctl stp access remove devpol --group group1
+ ```
